@@ -1,9 +1,15 @@
 import * as THREE from 'https://cdnjs.cloudflare.com/ajax/libs/three.js/r123/three.module.min.js';
 
+import { EffectComposer } from './node_modules/three/examples/jsm/postprocessing/EffectComposer.js';
+import { RenderPass } from './node_modules/three/examples/jsm/postprocessing/RenderPass.js';
+import { UnrealBloomPass } from './node_modules/three/examples/jsm/postprocessing/UnrealBloomPass.js';
+
 function main() {
   const canvas = document.querySelector('#c');
   const renderer = new THREE.WebGLRenderer({canvas});
   var count = 0; 
+
+  const composer = new EffectComposer( renderer );
 
   const fov = 75;
   const aspect = 2;  // the canvas default
@@ -87,6 +93,7 @@ function main() {
     const needResize = canvas.width !== width || canvas.height !== height;
     if (needResize) {
       renderer.setSize(width, height, false);
+      composer.setSize(width, height, false)
     }
     return needResize;
   }
@@ -129,7 +136,16 @@ function main() {
 
     cubeCamera.update( renderer, scene );
     
-    renderer.render(scene, camera);
+    if (count <= 1) { 
+      const renderPass = new RenderPass( scene, camera );
+      composer.addPass( renderPass );
+    
+      const bloomPass = new UnrealBloomPass({x: 256, y: 256}, 0.38, 0.1, 0.320);
+      composer.addPass( bloomPass );
+    }
+
+    composer.render(scene, camera);
+    // renderer.render(scene, camera);
 
     requestAnimationFrame(render);
   }
